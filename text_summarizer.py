@@ -4,21 +4,23 @@ Created on Mon Mar 25 12:59:46 2019
 
 @author: Shravan
 """
+import nltk
 from nltk.tokenize import word_tokenize
 from nltk.tokenize import sent_tokenize
 import numpy as np
-##from numpy import size
+from collections import defaultdict
+from nltk.chunk.regexp import RegexpParser	
+
 from nltk.tag import pos_tag
 #POS tagging is a supervised learning solution that uses features like the previous word, next word, is first letter capitalized and so on.
 #The function will load a pretrained tagger from a file. You can see the file name with nltk.tag._POS_TAGGER
-from collections import defaultdict
-##from nltk.util import Index
+
 from nltk.stem.wordnet import WordNetLemmatizer         
 #WordNet has large data (words) stored in lexical structure (synset, lemmas..) it lemmatizes based on the pos_tag provided (default is noun).   
-from nltk.chunk.regexp import RegexpParser				
+			
 from nltk.tree import ParentedTree	
 #ParentedTree is a subclass of Tree that automatically maintains parent pointers for single-parented trees.
-import nltk
+
 from nltk.chunk import ne_chunk							
 #to chunk only named-entity tags (or to select only required tags)
 #ne_chunk contains a pretrained model to classify words to name entities. 
@@ -32,9 +34,6 @@ from nltk.chunk import ne_chunk
 #PERCENT	    twenty pct, 18.75 %
 #FACILITY	    Washington Monument, Stonehenge
 #GPE	        South East Asia, Midlothian
-
-##from operator import itemgetter
-
 
 tex='''In 965 AD, Odin, king of Asgard, wages war against the Frost Giants of Jotunheim and their leader Laufey, to prevent them from conquering the nine realms, starting with Earth. The Asgardian warriors defeat the Frost Giants and seize the source of their power, the Casket of Ancient Winters.
 
@@ -50,8 +49,7 @@ In Asgard, Loki betrays and kills Laufey, revealing his true plan to use Laufey'
 In a post-credits scene, Selvig has been taken to a S.H.I.E.L.D. facility, where Nick Fury opens a briefcase and asks him to study a mysterious cube-shaped object,[N 3] which Fury says may hold untold power. An invisible Loki prompts Selvig to agree, and he does.'''
 
 
- 
-def norm(word,pos='x'):                 #lemmatize all nouns and no need to lemmatize proper nouns
+def norm(word,pos='x'):                 	#lemmatize all nouns and no need to lemmatize proper nouns
     word = word.lower()
     if pos not in ['NNP','NNPS']:
         wnl = WordNetLemmatizer()
@@ -59,44 +57,41 @@ def norm(word,pos='x'):                 #lemmatize all nouns and no need to lemm
     return (word)     
  
  
-sentList = sent_tokenize(tex)           #list of all tokenized sentences
+sentList = sent_tokenize(tex)				#list of all tokenized sentences
             
-print(sentList[0])            
-            
-sent_NounDict = defaultdict(list)        # a dictionary key:sentence_number value:all nouns in the sentence... (nouns are normalised)
+sent_NounDict = defaultdict(list)        	# a dictionary key:sentence_number value:all nouns in the sentence... (nouns are normalised)
 
 #extract only nouns from each sentence
 for s in sentList:
     for w,pos in pos_tag(word_tokenize(s)):
         if pos in ['NN','NNS','NNP','NNPS']:
             sent_NounDict[sentList.index(s)].append(norm(w,pos))
-#print (sent_NounDict[0])
 
-
-
-wordpos_SentDict = defaultdict(list)    # a dictionary key:(word,pos) value:all sentences it appears in...(word is normalised)
+wordpos_SentDict = defaultdict(list)    	# a dictionary key:(word,pos) value:all sentences it appears in...(word is normalised)
 
 for s in sentList:
     for w,pos in pos_tag(word_tokenize(s)):
         wordpos_SentDict[(norm(w,pos),pos)].append(sentList.index(s))     
-#print(wordpos_SentDict)
 
 #list of all nouns in the text
 listOfNouns = list(sorted(set([norm(w,pos) for s in sentList for w,pos in pos_tag(word_tokenize(s)) if pos in ['NN','NNS','NNP','NNPS']])))
-#print (listOfNouns)
+
 
 listOfTaggedSents = []      
 
 for s in sentList:
     l = [(word,pos) for word,pos in pos_tag(word_tokenize(s))]
     listOfTaggedSents.append(l)
-#print (listOfTaggedSents[0:3]) 
 
 mostSigNoun = []                #most recently encountered significant noun
 mostSigNounObject =  []         #most recently encountered significant noun which is not a person
 mostSigNounPerson = []          #most recently encountered significant noun which has named entity as person
 
-pronounsent_nounDict = defaultdict(list) #key:tuple(pronoun,sentence_num) val:list(list(tuple(noun,pos)))     noun not normalized
+pronounsent_nounDict = defaultdict(list) 	#key:tuple(pronoun,sentence_num) val:list(list(tuple(noun,pos)))     noun not normalized
+
+grammar =   """NP:{<DT>?<JJ>*(<NN.*>)+}    
+               PR:{<PRP.*>}
+            """
 
 #grammar for tagging noun phrases and pronouns
 #DT - determiners eg: The, a, an, my
@@ -104,11 +99,8 @@ pronounsent_nounDict = defaultdict(list) #key:tuple(pronoun,sentence_num) val:li
 #NN.* - any type of noun
 #PRP - personal pronoun eg: He, she, I, We, they
 
-grammar =   """NP:{<DT>?<JJ>*(<NN.*>)+}    
-               PR:{<PRP.*>}
-            """
 rp = RegexpParser(grammar)
-count = 0
+
 for s in listOfTaggedSents:
     
     begin = True
@@ -123,18 +115,16 @@ for s in listOfTaggedSents:
         if isinstance(n,nltk.tree.Tree):            
             if n.label()=='NP':
                 mostSigNoun = [w for w in n if w[1] in ['NN','NNS','NNP','NNPS']]
-                #print (mostSigNoun)
                 for ne in neTree:
                     if isinstance(ne,nltk.tree.Tree):
                         if ne[0] in mostSigNoun:
                             if ne.label() =='PERSON':
-                                mostSigNounPerson = []  #doubt
+                                mostSigNounPerson = []  
                                 mostSigNounPerson.append(ne[0])
                             else:
-                                mostSigNounObject = []  #doubt
+                                mostSigNounObject = []  
                                 mostSigNounObject.append(ne[0])  
                     
-                
             if n.label()=='PR':
                 pron = n[0][0].lower()
                 #print pron
@@ -149,45 +139,42 @@ for s in listOfTaggedSents:
                     else:  #when mostSigNounPerson is 0 then append mostSigNoun of last iteration. This else works when the sentence starts from pronoun such as he/she.
                         pronounsent_nounDict[(pron,listOfTaggedSents.index(s))].append(mostSigNoun)    
                  
-                #print pronounsent_nounDict         
                 
-                #adding the nouns corresponding to the pronouns to sentworddict and wordpos_sentdict
-                for nouns_with_pos in pronounsent_nounDict[(pron,listOfTaggedSents.index(s))]:   
-                    for noun_pos in nouns_with_pos:  #it is a list of lists
-                        sent_NounDict[listOfTaggedSents.index(s)].append(norm(noun_pos[0],noun_pos[1]))
-                        wordpos_SentDict[(norm(noun_pos[0],noun_pos[1]),noun_pos[1])].append(listOfTaggedSents.index(s))
+                #adding the nouns corresponding to the pronouns to sent_NounDict and wordpos_sentdict
+                for nouns in pronounsent_nounDict[(pron,listOfTaggedSents.index(s))]:   
+                    for noun in nouns:  #it is a list of lists
+                        sent_NounDict[listOfTaggedSents.index(s)].append(norm(noun[0],noun[1]))
+                        wordpos_SentDict[(norm(noun[0],noun[1]),noun[1])].append(listOfTaggedSents.index(s))
                            
-print (sent_NounDict,'\n\n')
+#print (sent_NounDict,'\n\n')
+#print (wordpos_SentDict,'\n\n')
+#print (pronounsent_nounDict,'\n\n')
 
-print (wordpos_SentDict,'\n\n')
-
-print (pronounsent_nounDict,'\n\n')
-
-for key,val in sent_NounDict.items():    #making the values of sent_noundict a set (to remove redundant nouns)
+for key,val in sent_NounDict.items():    			#making the values of sent_noundict a set (to remove redundant nouns)
     val = list(set(val))
     sent_NounDict[key] = val
-print (sent_NounDict)
+#print (sent_NounDict)
 
 #following code calculates the loc_of_noun_in_each_sent between two phrases
-loc_of_noun_in_each_sent = defaultdict(int)             #a dict.. key:(noun or pronoun converted to noun, sent_no) value:position in the sentence from the begining
+loc_of_noun_in_each_sent = defaultdict(int)			#a dict.. key:(noun or pronoun converted to noun, sent_no) value:position in the sentence from the begining
             
 for s in listOfTaggedSents:
-    dist = 0
+    loc = 0
     chunkedTree = ParentedTree.convert(rp.parse(s))
     for n in chunkedTree:
         if isinstance(n,nltk.tree.Tree):            
             if n.label()=='NP':
                 tempNoun = [w for w in n if w[1] in ['NN','NNS','NNP','NNPS']]
                 for w in tempNoun:
-                    loc_of_noun_in_each_sent[(norm(*w),listOfTaggedSents.index(s))] = dist
+                    loc_of_noun_in_each_sent[(norm(*w),listOfTaggedSents.index(s))] = loc
             if n.label()=='PR':
                 pronoun = n[0][0].lower()
                 tempNoun = pronounsent_nounDict[(pronoun,listOfTaggedSents.index(s))]                
                 for li in tempNoun:
                     for word in li:
-                        loc_of_noun_in_each_sent[(norm(word[0],word[1]),listOfTaggedSents.index(s))] = dist
-        dist+=1
-print(loc_of_noun_in_each_sent)
+                        loc_of_noun_in_each_sent[(norm(word[0],word[1]),listOfTaggedSents.index(s))] = loc
+        loc += 1
+#print(loc_of_noun_in_each_sent)
 
 #the following code assigns relation factor between two nouns
 nounGraph = np.zeros((len(listOfNouns),len(listOfNouns)))
@@ -203,10 +190,8 @@ for key,value in sent_NounDict.items():
                 nounGraph[listOfNouns.index(v1)][listOfNouns.index(v2)] += float((100/(abs(d)+1)))
                 #print(v1+' '+v2+" "+str(d))
 
-
-print(nounGraph)
-
-                
+#print(nounGraph)
+         
 nounPriority = defaultdict(int)             #dict to hold noun priorities... key:noun(normalized)  value:priority
 sentencePriority = defaultdict(int)         #dict to hold sentence priorities...key:sentence_num   value:priority
 
@@ -230,22 +215,22 @@ def calcSentPriority():                     #function calculates sentence priori
 calcNounPriority()
 calcSentPriority()
 
-print (sorted(nounPriority.items(),key=lambda x:x[1], reverse=True))
-print (sorted(sentencePriority.items(),key=lambda x:x[1], reverse=True))
+#print (sorted(nounPriority.items(),key=lambda x:x[1], reverse=True))
+#print (sorted(sentencePriority.items(),key=lambda x:x[1], reverse=True))
 
-reducingFactor = 0.8    #to reduce the impact of nouns that were encountered before. Lower this value if more nouns(or more diversity) in summary is required
-summary = []            #list to hold the summary
+reducingFactor = 0.8    					#to reduce the impact of nouns that were encountered before. Lower this value if more nouns(or more diversity) in summary is required
+summary = []            					#list to hold the summary
 
 for i in range(int(len(sentencePriority)/4)):
     summary.append(max(sentencePriority.items(),key = lambda x:x[1])) 
     j = summary[-1][0]
     
     for n in sent_NounDict[j]:
-        nounPriority[n] *= reducingFactor                   #reduce the priority of all nouns in the picked sentence
+        nounPriority[n] *= reducingFactor         	#reduce the priority of all nouns in the picked sentence
     
     del sent_NounDict[j]         
-    del sentencePriority[j]                                #remove the picked sentence
-    calcSentPriority()                                      #recalculate sentence priority
+    del sentencePriority[j]                         #remove the picked sentence
+    calcSentPriority()                              #recalculate sentence priority
 
 print ("\n\n")
 i=1
