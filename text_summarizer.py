@@ -24,7 +24,7 @@ from nltk.tree import ParentedTree
 from nltk.chunk import ne_chunk							
 #to chunk only named-entity tags (or to select only required tags)
 #ne_chunk contains a pretrained model to classify words to name entities. 
-#Name Entities Available in that model are:NE Type	Examples
+#Name Entities Available in that model are:
 #ORGANIZATION	Georgia-Pacific Corp., WHO
 #PERSON	        Eddy Bonte, President Obama
 #LOCATION	    Murray River, Mount Everest
@@ -73,9 +73,6 @@ for s in sentList:
     for w,pos in pos_tag(word_tokenize(s)):
         wordpos_SentDict[(norm(w,pos),pos)].append(sentList.index(s))     
 
-#list of all nouns in the text
-listOfNouns = list(sorted(set([norm(w,pos) for s in sentList for w,pos in pos_tag(word_tokenize(s)) if pos in ['NN','NNS','NNP','NNPS']])))
-
 
 listOfTaggedSents = []      
 
@@ -100,10 +97,9 @@ grammar =   """NP:{<DT>?<JJ>*(<NN.*>)+}
 #PRP - personal pronoun eg: He, she, I, We, they
 
 rp = RegexpParser(grammar)
-
+count = 0
 for s in listOfTaggedSents:
     
-    begin = True
     chunkedTree = ParentedTree.convert(rp.parse(s))         #tree of chunked parts of the sentence
                                                             #ParentedTree is used to convert tagged words to tree structure 
     neTree = ne_chunk(s)                                    #tree with named entity tags
@@ -111,20 +107,21 @@ for s in listOfTaggedSents:
     #print (chunkedTree)
     #chunkedTree.draw()
     #neTree.draw()
+    
     for n in chunkedTree:
         if isinstance(n,nltk.tree.Tree):            
             if n.label()=='NP':
                 mostSigNoun = [w for w in n if w[1] in ['NN','NNS','NNP','NNPS']]
-                for ne in neTree:
+                for ne in neTree:                           #ne contains nouns and pos
                     if isinstance(ne,nltk.tree.Tree):
                         if ne[0] in mostSigNoun:
-                            if ne.label() =='PERSON':
+                            if ne.label() == 'PERSON' or ne.label() == 'ORGANIZATION' :
                                 mostSigNounPerson = []  
                                 mostSigNounPerson.append(ne[0])
                             else:
                                 mostSigNounObject = []  
                                 mostSigNounObject.append(ne[0])  
-                    
+                        
             if n.label()=='PR':
                 pron = n[0][0].lower()
                 #print pron
@@ -176,6 +173,9 @@ for s in listOfTaggedSents:
         loc += 1
 #print(loc_of_noun_in_each_sent)
 
+#list of all nouns in the text
+listOfNouns = list(sorted(set([norm(w,pos) for s in sentList for w,pos in pos_tag(word_tokenize(s)) if pos in ['NN','NNS','NNP','NNPS']])))
+
 #the following code assigns relation factor between two nouns
 nounGraph = np.zeros((len(listOfNouns),len(listOfNouns)))
 
@@ -221,7 +221,7 @@ calcSentPriority()
 reducingFactor = 0.8    					#to reduce the impact of nouns that were encountered before. Lower this value if more nouns(or more diversity) in summary is required
 summary = []            					#list to hold the summary
 
-for i in range(int(len(sentencePriority)/4)):
+for i in range(int(len(sentencePriority)/4)):       
     summary.append(max(sentencePriority.items(),key = lambda x:x[1])) 
     j = summary[-1][0]
     
