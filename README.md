@@ -14,7 +14,7 @@ Importance of a sentence is measured by lexical analysis and by measuring noun-p
 
 Nlp involves iterating the text many times. To avoid it as much as possible it is programmed using many dictionaries.
 Some of the objects (lists, dictionaries) used are (just for the reference): <br/> 
-                          key                     values <br/>
+                          key<tb/>                    values <br/>
 sent_NounDict             Sentence number         Nouns <br/>
 wordpos_SentDict          (word, pos)             Sentence number <br/>
 pronounSent_nounDict      (pronoun, sentence no)  list(list((noun, pos))) <br/>
