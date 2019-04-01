@@ -23,14 +23,10 @@ pronounSent_nounDict    | (pronoun, sentence no)     | list(list((noun, pos)))
 nounPriority            | noun                | priority 
 sentencePriority        | Sentence number     | priority 
 
-First Header | Second Header
+List Name | Comments
 ------------ | -------------
-Content from cell 1 | Content from cell 2
-Content in the first column | Content in the second column
-
-mostSigNoun -    List of most significant nouns <br/> 
-mostSigNounObject - List of most significant nouns which are objects <br/> 
-mostSigNounPerson - List of most significant nouns Person <br/> 
-sentList - List of sentences <br/> 
-listOfNouns - List of nouns <br/> 
-
+mostSigNoun | List of most significant nouns
+mostSigNounObject | List of most significant nouns which are objects
+mostSigNounPerson | List of most significant nouns Person
+sentList | List of sentences  
+listOfNouns | List of nouns  
