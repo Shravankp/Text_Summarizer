@@ -7,10 +7,10 @@ This project is based on extractive summarization where in important sentences a
 Importance of a sentence is measured by lexical analysis and by measuring noun-pronoun relationship and thier distances. 
 * Preprocess the text i.e to remove stopwords, stemming and lemmatizing.
 * Identify which words are nouns and pronouns.
-## Forming an lexical tree to distinguish person, object, group and so on.
-## Finding relation between nouns and pronouns to Assign nouns to each of the pronouns to which it referred to.
-## whichever noun-pronoun pair has less distance and occur frequently in a sentence is considered as an important sentence.
-(The same can be implemented for noun-verb, noun-preposition relationship and so on.)
+* Forming an lexical tree to distinguish person, object, group and so on.
+* Finding relation between nouns and pronouns to Assign nouns to each of the pronouns to which it referred to.
+* whichever noun-pronoun pair has less distance and occur frequently in a sentence is considered as an important sentence.
+  (The same can be implemented for noun-verb, noun-preposition relationship and so on.)
 
 Nlp involves iterating the text many times. To avoid it as much as possible it is programmed using many dictionaries.
 Some of the objects (lists, dictionaries) used are (just for the reference):
