@@ -13,17 +13,17 @@ Importance of a sentence is measured by lexical analysis and by measuring noun-p
   (The same can be implemented for noun-verb, noun-preposition relationship and so on.)
 
 Nlp involves iterating the text many times. To avoid it as much as possible it is programmed using many dictionaries.
-Some of the objects (lists, dictionaries) used are (just for the reference): <br/> 
-                          key                     values <br/>
-sent_NounDict             Sentence number         Nouns <br/>
-wordpos_SentDict          (word, pos)             Sentence number <br/>
-pronounSent_nounDict      (pronoun, sentence no)  list(list((noun, pos))) <br/>
-nounPriority              noun                    priority <br/>
-sentencePriority          sentence number         priority <br/>
+Some of the objects (dictionaries, lists) used are (just for the reference): <br/> 
+                        | Key                 | Values
+sent_NounDict           | Sentence number     | Nouns
+wordpos_SentDict        | (word, pos)         | Sentence number
+pronounSent_nounDict    | (pronoun, sentence no)     | list(list((noun, pos)))
+nounPriority            | noun                | priority 
+sentencePriority        | Sentence number     | priority 
 
-mostSigNoun           #List of most significant nouns <br/> 
-mostSigNounObject     #List of most significant nouns which are objects <br/> 
-mostSigNounPerson     #List of most significant nouns Person <br/> 
-sentList              #List of sentences <br/> 
-listOfNouns           #List of nouns <br/> 
+mostSigNoun <br/> List of most significant nouns <br/> 
+mostSigNounObject - List of most significant nouns which are objects <br/> 
+mostSigNounPerson - List of most significant nouns Person <br/> 
+sentList - List of sentences <br/> 
+listOfNouns - List of nouns <br/> 
 
